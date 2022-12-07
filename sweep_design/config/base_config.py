@@ -3,195 +3,214 @@ from ..axis import get_array_axis_from_array
 
 
 class Config:
-    """The configuration file.
+    """The configuration class.
 
     The methods used to calculate the various parameters are provided in the
     configuration file. Also the file contain an other parameters.
-    -----------------------------------------------------------------------
 
-    **interpolate_extrapolate_method**:
-    > The method by which interpolation and extrapolation are performed.
-    > The methods returns a function that takes a new x sequence and
+    ---
+
+    `get_array_axis_from_array_method`:
+
+    Method to create new instance of ArrayAxis from some array of numbers.
+
+    Args:
+        x (ArrayLike): input array_like of numbers.
+        round_dx (bool, optional): if True then round sample. Defaults to True.
+
+    Returns:
+        ArrayAxis: new ArrayAxis.
+
+    ---
+
+
+    `interpolate_extrapolate_method`:
+
+    The method by which interpolation and extrapolation are performed.
+    The method returns a function that takes a new x sequence and
     return a new y sequence.
 
-    > **new_x** = `numpy.ndarray`
-    > **new_y** = `numpy.ndarray`
+    Method derived from default function:
+    sweep_design.defaults.methods.interpolate_extrapolate
 
-    > Method derived from default function:
-    >> sweep_design.math_signals.defaults.methods.interpolate_extrapolate
+    Args:
+        x (X): numbers array of axis. Samples can be not equal.
 
-    > **input**:
-    >> **x**: `numpy.ndarray`
-    >> **y**: `numpy.ndarray`
+        y (Y): Representation interpolated extrapolated functions
+            as array.
 
-    > **output**:
-    >> `Callable`[[**new_x**], **new_y**]
+        bounds_error (bool, optional): if False then do not raise error if new
+            array behind of bound old array. Defaults to False.
 
-    - - -
+        fill_value (float, optional): default fill value if other not expected.
+            Defaults to 0.0.
 
-    **math_operation_method**:
-    > The method of basic mathematical operations of addition (+),
-    subtraction(-), multiplication (*), division(/), exponentiation (**)
-    and their unary operations (+=, -=, *=, /=).
+    Returns:
+        Callable[[X], Y]: Callable that get first new array of x and return
+            interpolate-extrapolate result.
 
-    > Method derived from default function:
-    >> `sweep_design.math_signals.defaults.methods.math_operation`
+    ---
 
-    > **input**:
-    >> **x**: `numpy.ndarray`
-    >> **y1**: `numpy.ndarray`
-    >> **y2**: `Union`[`numpy.ndarray`, `float`, `int`, `complex`]
-    >> **name_operation**: `sweep_design.math_signals.defaults.base_structures.MathOperation`
+    `math_operation_method`:
 
-    > **output**:
-    >> `Tuple` [
-    >> **x**: `numpy.ndarray`,
-    >> **y**: `numpy.ndarray`
-    >>]
+    Method for math operation
+    Method derived from default function:
+    `sweep_design.defaults.math_operation`
 
-    - - -
+    Args:
+        y1 (np.ndarray): first sequence y.
+        y2 (Union[np.ndarray, Number]): second sequence y or other number
+            name_operation (MathOperation): which mathematical operation (+, -,
+            \\*, / and etc.)
 
-    **integrate_one_method**:
-    > Method for calculating the integral of a sequence on a segment.
-    > Method derived from default function:
+    Raises:
+        TypeFuncError: if operation can not be executed.
 
-    >> `sweep_design.math_signals.defaults.methods.one_integrate`
+    Returns:
+        Y: result of math operation.
 
-    > **input**:
-    >> **x**: `numpy.ndarray`
-    >> **y**: `numpy.ndarray`
+    ---
 
-    > **output**:
-    >> `float`
+    `integrate_one_method`:
 
-    - - -
+    Method for calculating the integral of a sequence on a segment.
+    Method derived from default function:
+    `sweep_design.defaults.methods.one_integrate`
 
-    **integrate_method**:
-    > The method by which the integration is performed.
-    > Method derived from default function:
-    >> `sweep_design.math_signals.defaults.methods.integrate`
+    Args:
+        relation (Relation): from will be calculated integral.
 
-    > **input**:
-    >> **x**: `numpy.ndarray`
-    >> **y**: `numpy.ndarray`
-    >> d**x**: float - sequence sample rate x
+    Returns:
+        float: result of integration.
 
-    > **output**:
-    >> Tuple [
-        **x**: `numpy.ndarray`,
-        **y**: `numpy.ndarray`
-    ]
+    ---
 
-    - - -
+    `integrate_method`:
 
-    **differentiate_method**:
-    > The method by which differentiation is performed.
-    > Method derived from default function:
-    >> `sweep_design.math_signals.defaults.methods.differentiate`
+    The method by which the integration array is performed. Integration across
+    the entire function. Get the expected integrated array function.
+    Method derived from default function:
+    `sweep_design.defaults.methods.integrate`
 
-    > **input**:
+    Args:
+        relation (Relation): integrated function.
 
-    >> **x**: `numpy.ndarray`
-    >> **y**: `numpy.ndarray`
-    >> **dx**: `float` - sequence sample rate **x**
+    Returns:
+        Tuple[XAxis, Y]: result of integration of function.
 
-    > **output**:
-    >>Tuple [
-        **x**: `numpy.ndarray`,
-        **y**: `numpy.ndarray`
-    ]
+    ---
 
-    - - -
+    `integrate_function_method`:
 
-    **correlate_method**:
-    > The method by which the correlation is performed.
-    > Method derived from default function:
-    >> `sweep_design.math_signals.defaults.methods.correlate`
+    The method by which the integration function is performed. Integration across
+    the entire function. Get the expected integrated array function.
+    Method derived from default function:
+    `sweep_design.defaults.methods.integrate_function`
 
-    > **input**:
-    >> cls: Relation
-    >> r1: Relation
-    >> r2: Relation
+    Args:
+        function (Callable[[x], y]): function is describing
+            changes frequency from time.
 
-    > **output**:
-    >> Tuple [
-        **x**: `numpy.ndarray`,
-        **y**: `numpy.ndarray`
-    ]
+        x (np.ndarray): time array.
 
-    - - -
+    Returns:
+        Relation: result of integration function.
 
-    **convolve_method**:
-    > The method by which the convolution is performed.
-    > Method derived from default function:
-    >> `sweep_design.math_signals.defaults.methods.convolve`
+    ---
 
-    > **input**:
-    >> cls: Relation
-    >> r1: Relation
-    >> r2: Relation
+    `differentiate_method`:
 
-    > **output**:
-    >> Tuple [
-        **x**: `numpy.ndarray`,
-        **y**: `numpy.ndarray`
-    ]
+    The method by which differentiation is performed.
+    Method derived from default function:
+    `sweep_design.defaults.methods.differentiate`
 
-    - - -
+    Args:
+        relation (Relation): function which will be differentiated.
 
-    **get_common_x**:
-    > A method by which to find the common sequence of numbers along
-    > the x-axis, obtained from two other sequences along the x-axis.
-    > Method derived from default function:
-    >> `sweep_design.math_signals.defaults.methods.get_common_x`
+    Returns:
+        Tuple[XAxis, Y]: result of differentiation.
 
-    > **input**:
-    >> **x1**: `numpy.ndarray`
-    >> **x2**: `numpy.ndarray`
-    >> **dx1**: float  - sample rate first sequence
-    >> **dx2**: float  - sample rate second sequence
+    ---
 
-    > **output**:
-    >> **x**: `numpy.ndarray`
+    `correlate_method`:
 
-    - - -
+    The method by which the correlation is performed.
+    Method derived from default function:
+    `sweep_design.defaults.methods.correlate`
 
-    **spectrum2signal_method**:
-    > Method for converting a spectrum into a signal. (Using Fourier transform)
-    > Method derived from default function:
-    >> `sweep_design.math_signals.defaults.methods.spectrum2sigmal`
+    Args:
+        cls (Type[&quot;Relation&quot;]): cls to use equalization of two arrays.
+        r1 (Relation): first function y.
+        r2 (Relation): second function y.
 
-    > **input**:
-    >> **frequenc**: `numpy.ndarray`
-    **specturm**: `numpy.ndarray`
-    **start_time**: `float` = `None`
+    Returns:
+        Tuple[XAxis, np.ndarray]: result of correlation.
 
-    > **output**:
-    >> Tuple [
-        **time**: `numpy.ndarray`,
-        **amplitude**: `numpy.ndarray`
-    ]
+    ---
 
-    - - -
+    `convolve_method`:
 
-    **signal2spectrum_method**:
-    > Method for converting a signal into a spectrum. (Using Fourier transform)
-    > Method derived from default function:
-    >> `sweep_design.math_signals.defaults.methods.spectrum2sigmal`
+    The method by which the convolution is performed.
+    Method derived from default function:
+    `sweep_design.defaults.methods.convolve`
 
-    > **input**:
+    Args:
+        cls (Type[&quot;Relation&quot;]): class to use equalization of two arrays.
+        r1 (Relation): first function y.
+        r2 (Relation): second function y.
 
-    >> **time**: `numpy.ndarray`
-    >> **amplitude**: `numpy.ndarray`
-    >> **is_start_zero** = `False`
+    Returns:
+        Tuple[XAxis, np.ndarray]: result of convolution.
 
-    > **output**:
-    >> Tuple [
-        **frequency**: `numpy.ndarray`,
-        **spectrum**: `numpy.ndarray`
-    ]
+    ---
 
-    - - -
+    `get_common_x`:
+
+    A method by which to find the common sequence of numbers along
+    the x-axis, obtained from two other sequences along the x-axis.
+    Method derived from default function:
+    `sweep_design.defaults.methods.get_common_x`
+
+    Args:
+        x1 (XAxis): first axis.
+        x2 (XAxis): second axis.
+
+    Returns:
+        XAxis: return common axis.
+
+    ---
+
+    `spectrum2signal_method`:
+
+    Method for converting a spectrum into a signal. (Using Fourier transform)
+    Method derived from default function:
+    `sweep_design.defaults.methods.spectrum2signal`
+
+    Args:
+        relation (Relation): spectrum of signal.
+        time_start (float, optional): default fft convert to 0. time. Maybe you
+            want another start of time. Defaults to None.
+
+    Returns:
+        Tuple[TimeAxis, np.ndarray]: result transformation spectrogram to signal.
+
+    ---
+
+    `signal2spectrum_method`:
+    Method for converting a signal into a spectrum. (Using Fourier transform)
+    Method derived from default function:
+    `sweep_design.defaults.methods.signal2spectrum`
+
+    Args:
+        relation (Relation): signal from which get spectrum.
+        is_start_zero (bool, optional): Consider array started from zero time.
+            Defaults to False.
+
+    Returns:
+        Tuple[FrequencyAxis, np.ndarray]: result transformation signal to
+            spectrum.
+
+    ---
 
     The above methods can be overridden with your own here, or you can import the
     class `Config` somewhere and override it there.
@@ -201,7 +220,7 @@ class Config:
     """
 
     # Methods for the Relation.
-    get_array_axis_from_array = get_array_axis_from_array
+    get_array_axis_from_array_method = get_array_axis_from_array
     interpolate_extrapolate_method = dfm.interpolate_extrapolate
     math_operation = dfm.math_operation
     integrate_one_method = dfm.one_integrate
