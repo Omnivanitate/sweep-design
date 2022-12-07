@@ -1,11 +1,11 @@
-from typing import Literal
+from typing import Literal, Optional
 import numpy as np
 from scipy.signal.windows import tukey  # type: ignore
 
 
 def tukey_a_t(
     time: np.ndarray,
-    t_tapper: float,
+    time_tapper: Optional[float],
     location: Literal["left", "right", "both"] = "both",
 ) -> np.ndarray:
     '''Calculate array envelope for signal.
@@ -13,22 +13,24 @@ def tukey_a_t(
     Args:
         time (np.ndarray): time
 
-        t_tapper (float): t_tapper in time, where coefficient will be equal 1.
+        time_tapper (float): time_tapper in time, where coefficient will be equal 1.
 
         location (Literal[&quot;left&quot;, &quot;right&quot;, &quot;both&quot;], optional):
-        Where the correction will be applied.
-        "left" is at the start.
-        "right" is at the end.
-        "both" is at the start and at the end.
-        Defaults to "both".
+            Where the correction will be applied.
+            "left" is at the start.
+            "right" is at the end.
+            "both" is at the start and at the end.
+            Defaults to "both".
 
     Returns:
         np.ndarray: amplitude correction for signal. Multiple signal to result
-        of function.
+            of function.
     '''
+    if time_tapper is None:
+        return np.ones(time.size)
 
-    if t_tapper <= time[int(time.size / 2)]:
-        tapper = time[time <= t_tapper].size * 2 / time.size
+    if time_tapper <= time[int(time.size / 2)]:
+        tapper = time[time <= time_tapper].size * 2 / time.size
     else:
         tapper = 1.0
 

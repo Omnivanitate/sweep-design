@@ -5,7 +5,7 @@ import numpy as np
 from scipy import integrate  # type: ignore
 
 from ..spectrum import Spectrum
-from ..types import Time, Frequency, Envelope
+from ..help_types import Time, Frequency, Envelope
 
 
 def proportional_freq2time(
