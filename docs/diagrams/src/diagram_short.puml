@@ -1,0 +1,102 @@
+@startuml "short_structure_sweep-design"
+
+class ArrayAxis {
+    start: float
+    end: float
+    sample: float
+    actual_sample: float 
+}
+
+class Relation {
+    y: np.ndarray
+    x: ArrayAxis
+    start: float
+    end: float
+    sample: float
+    actual_sample: float
+    array: np.ndarray
+    size: int
+    Tuple[np.ndarray, np.ndarray] get_data()
+    Number max()
+    Number min()
+    float get_norm()
+    Relation select_data()
+    Relation exp()
+    Relation diff()
+    Relation integrate()
+    Relation interpolate_extrapolate()
+    Relation shift()
+    Tuple[Relation, Relation] equalize()
+    Relation correlate()
+    Relation convolve()
+    Relation math_operations()
+
+}
+
+class Signal {
+_spectrum: Spectrum
+time: ArrayAxis
+amplitude: np.ndarray
+
+Spectrum get_spectrum()
+Relation get_amplitude_spectrum()
+Relation get_phase_spectrum()
+Signal get_reverse_signal()
+Signal add_phase()
+Signal sub_phase()
+
+}
+
+class Spectrum {
+_signal: Signal
+frequency: ArrayAxis
+amplitude: np.ndarray
+
+Signal get_signal()
+Relation get_amplitude_spectrum()
+Relation get_phase_spectrum()
+Spectrum get_reverse_filter()
+Spectrum add_phase()
+Spectrum sub_phase()
+Spectrum get_spectrum_from_amp_phase()
+}
+
+class Sweep {
+    frequency_time: Relation
+    amplitude_time: Relation
+    spectrogram: Spectrogram
+    a_prior_signal: Signal
+
+}
+
+class Spectrogram {
+    time: ArrayAxis
+    amplitude: ArrayAxis
+    spectrogram: np.ndarray
+}
+
+class UncalculatedSweep {
+    Sweep __call__()
+}
+
+class ApriorUncalculatedSweep {
+    Sweep __call__()
+}
+
+Relation "1" o-- "1" ArrayAxis
+Signal --|> Relation
+Spectrum --|> Relation
+
+Signal "1" o-- "1" Spectrum
+Spectrum "1" o-- "1" Signal
+
+Sweep --|> Signal
+
+Spectrogram o-- ArrayAxis
+Sweep o-- Spectrogram
+Sweep o-- Relation
+Sweep o-- Signal
+
+ApriorUncalculatedSweep --|> UncalculatedSweep
+
+@enduml

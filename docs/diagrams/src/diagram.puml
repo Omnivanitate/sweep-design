@@ -1,0 +1,102 @@
+@startuml "Structure_sweep-design"
+
+class ArrayAxis {
+    start: float
+    end: float
+    sample: float
+    actual_sample: float 
+}
+
+class Relation {
+    y: np.ndarray
+    x: ArrayAxis
+    start: float
+    end: float
+    sample: float
+    actual_sample: float
+    array: np.ndarray
+    size: int
+    Tuple[np.ndarray, np.ndarray] get_data()
+    Number max()
+    Number min()
+    float get_norm()
+    Relation select_data(start: float, end: float)
+    Relation exp()
+    Relation diff()
+    Relation integrate()
+    Relation interpolate_extrapolate(new_x: ArrayAxis)
+    Relation shift(x_shift: float)
+    Tuple[Relation, Relation] equalize(r1: Relation, r2: Relation)
+    Relation correlate(cls: Relation, r1: Relation, r2: Relation)
+    Relation convolve(cls: Relation, r1: Relation, r2: Relation)
+    Relation math_operations(r1: Relation, r2: Relation)
+
+}
+
+class Signal {
+_spectrum: Spectrum
+time: ArrayAxis
+amplitude: np.ndarray
+
+Spectrum get_spectrum(recalculate=False, is_start_zero=False)
+Relation get_amplitude_spectrum(recalculate=False, is_start_zero=False)
+Relation get_phase_spectrum(recalculate=False, is_start_zero=False)
+Signal get_reverse_signal(**params)
+Signal add_phase(other: Relation)
+Signal sub_phase(other: Relation)
+
+}
+
+class Spectrum {
+_signal: Signal
+frequency: ArrayAxis
+amplitude: np.ndarray
+
+Signal get_signal(recalculate=False, start_time: float = None)
+Relation get_amplitude_spectrum()
+Relation get_phase_spectrum()
+Spectrum get_reverse_filter(**params)
+Spectrum add_phase(other: Relation)
+Spectrum sub_phase(other: Relation)
+Spectrum get_spectrum_from_amp_phase(cls: Spectrum, r1: Relation, r2: Relation)
+}
+
+class Sweep {
+    frequency_time: Relation
+    amplitude_time: Relation
+    spectrogram: Spectrogram
+    a_prior_signal: Signal
+
+}
+
+class Spectrogram {
+    time: ArrayAxis
+    amplitude: ArrayAxis
+    spectrogram: np.ndarray
+}
+
+class UncalculatedSweep {
+    Sweep __call__(time: ArrayAxis)
+}
+
+class ApriorUncalculatedSweep {
+    Sweep __call__(time: ArrayAxis)
+}
+
+Relation "1" o-- "1" ArrayAxis
+Signal --|> Relation
+Spectrum --|> Relation
+
+Signal "1" o-- "1" Spectrum
+Spectrum "1" o-- "1" Signal
+
+Sweep --|> Signal
+
+Spectrogram o-- ArrayAxis
+Sweep o-- Spectrogram
+Sweep o-- Relation
+Sweep o-- Signal
+
+ApriorUncalculatedSweep --|> UncalculatedSweep
+
+@enduml
