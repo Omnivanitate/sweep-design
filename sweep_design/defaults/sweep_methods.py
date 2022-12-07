@@ -4,14 +4,18 @@ import numpy as np
 from scipy.signal import hilbert, spectrogram  # type: ignore
 
 from .. import relation, signal, spectrum
-from ..axis import ArrayAxis, get_array_axis_from_array
+from ..axis import ArrayAxis
 from ..config import base_config
 from ..exc import BadInputError
-from ..types import ArrayLike, Frequency, Time, Envelope, Spectrogram, Ftat
+from ..help_types import ArrayLike, Frequency, Time, Envelope, Spectrogram, Ftat
+
 Ftatr = Union["relation.Relation", Ftat]
+'''The Representation of object from which will be extracted frequency
+modulation or amplitude modulation.'''
 
 CallFtatMethod = Callable[[
     "spectrum.Spectrum"], Tuple[Time, Frequency, Envelope]]
+'''Method is used to extract frequency and amplitude modulation from spectrum.'''
 
 
 def simple_freq2time(
@@ -25,7 +29,7 @@ def simple_freq2time(
 
     Returns:
         Tuple[Time, Frequency, Envelope]: simple representation Frequency
-        modulation from a prior spectrum.
+            modulation from a prior spectrum.
     '''
 
     amplitude_spectrum = spectrum.get_amp_spectrum()
@@ -41,15 +45,30 @@ def simple_freq2time(
 
 
 class InterpolateArray:
+    '''Class to interpolate array.
+
+    Use to stretch data to new axis.
+    '''
 
     def __init__(
         self,
         x: Union[relation.Relation, ArrayAxis, ArrayLike],
         y: Optional[ArrayLike] = None
     ) -> None:
+        '''Initialize InterpolateArray.
+
+        Args:
+            x (Union[relation.Relation, ArrayAxis, ArrayLike]): old array of x
+                or old `Relation` instance.
+
+            y (Optional[ArrayLike], optional): old array of y or None. Defaults to None.
+
+        Raises:
+            BadInputError: raise exception if will be not enough data.
+        '''
 
         if isinstance(x, relation.Relation):
-            self._x = x.x.copy()
+            self._x = x.x.array.copy()
             self._y = x.y.copy()
             return None
 
@@ -59,16 +78,23 @@ class InterpolateArray:
         self._y = np.array(y)
 
         if isinstance(x, ArrayAxis):
-            self._x = x.copy()
+            self._x = x.array.copy()
         else:
             self._x = np.array(x)
 
-    def __call__(self, new_x: ArrayAxis) -> Tuple[ArrayAxis, np.ndarray]:
-        stretch_old_x = ArrayAxis(
-            new_x.start,
-            new_x.end,
-            sample=(new_x.end - new_x.start) / (self._x.size - 1)
-        )
+    def __call__(self, new_x: ArrayAxis) -> np.ndarray:
+        '''Get new array of y.
+
+        Stretch and interpolate old array y to get new array y.
+        Args:
+            new_x (ArrayAxis): new array of x.
+
+        Returns:
+            np.ndarray: new array of y.
+        '''
+        stretch_old_x = self._x * \
+            ((new_x.end - new_x.start) /
+             self._x[-1]) - self._x[0] + new_x.start
 
         new_y = base_config.Config. \
             interpolate_extrapolate_method(stretch_old_x, self._y)
@@ -110,9 +136,11 @@ def get_info_from_a_prior_data(
 
     Args:
         time (Any): time.
+
         a_prior_data (Any): a prior data.
+
         f_a_t_method (CallFtatMethod): method to convert a prior data for
-        functions that will use to create sweep signal.
+            functions that will use to create sweep signal.
 
     Returns (TupleInterpolateArray,InterpolateArray, "Signal"]):
         return frequency-time and amplitude-time functions and a prior signal.
@@ -180,7 +208,7 @@ def get_info_from_ftat(
     t2, a_t = _extract_x_t(t, a_t)
 
     if isinstance(t, np.ndarray):
-        t = get_array_axis_from_array(t, True)
+        t = base_config.Config.get_array_axis_from_array_method(t, True)
     if t is None:
         if t1 is None and t2 is not None:
             t = t2
@@ -200,7 +228,7 @@ def _extract_x_t(
     Union[Callable[[np.ndarray], np.ndarray], InterpolateArray]
 ]:
     if isinstance(t, np.ndarray):
-        t = get_array_axis_from_array(t, False)
+        t = base_config.Config.get_array_axis_from_array_method(t, False)
 
     b_x_t: Union[Callable[[np.ndarray], np.ndarray], InterpolateArray]
     if not callable(x_t):
@@ -210,7 +238,7 @@ def _extract_x_t(
             b_x_t = InterpolateArray(x_t)
         else:
             if isinstance(t, np.ndarray):
-                t = get_array_axis_from_array(t)
+                t = base_config.Config.get_array_axis_from_array_method(t)
 
             if isinstance(t, ArrayAxis) and isinstance(x_t, np.ndarray):
                 if t.size != x_t.size:
@@ -218,8 +246,8 @@ def _extract_x_t(
                         t.start, t.end, (t.start - t.end) / (x_t.size - 1))
 
                     interpolate_x_t = base_config.Config. \
-                        interpolate_extrapolate_method(calc_t, x_t)
-                    x_t = interpolate_x_t(t)[1]
+                        interpolate_extrapolate_method(calc_t.array, x_t)
+                    x_t = interpolate_x_t(t)
                 b_x_t = InterpolateArray(t, x_t)
             else:
                 raise BadInputError("Not enough data: t or x_t")
@@ -235,14 +263,14 @@ def _extract_x_t(
 def get_spectrogram(sweep: "relation.Relation") -> Spectrogram:
     '''Function to get spectrogram of the sweep signal.
 
-    Using the scipy.signal.spectrogram function.
+    Using the `scipy.signal.spectrogram` function.
 
     Args:
         sweep (relation.Relation): instance of sweep signal.
 
     Returns:
         Spectrogram: tuple of np.ndarray. The first element is time.
-        The second is frequency. The third is matrix M x N of spectrogram.
+            The second is frequency. The third is matrix M x N of spectrogram.
     '''
 
     if sweep.y.size < 256:
@@ -252,14 +280,14 @@ def get_spectrogram(sweep: "relation.Relation") -> Spectrogram:
     frequency, spectrogram_time, spectrogram_ = spectrogram(
         sweep.y, 1 / (sweep.sample), nperseg=nperseg)
 
-    return spectrogram_time, frequency, spectrogram_
+    return spectrogram_time, frequency, spectrogram_[::-1, ::]
 
 
 def get_f_t(sweep: "relation.Relation") -> "relation.Relation":
     '''Get Time-Frequency function from sweep signal using the Hilbert
     transformation.
 
-    Using the scipy.signal.hilbert function.
+    Using the `scipy.signal.hilbert` function.
 
     Args:
         sweep (Relation): instance of sweep signal.
@@ -281,7 +309,7 @@ def get_f_t(sweep: "relation.Relation") -> "relation.Relation":
 def get_a_t(sweep: "relation.Relation") -> "relation.Relation":
     '''Get envelop from sweep signal using the Hilbert transformation.
 
-    Using the scipy.signal.hilbert function.
+    Using the `scipy.signal.hilbert` function.
 
     Args:
         sweep (Relation): instance of sweep signal.
