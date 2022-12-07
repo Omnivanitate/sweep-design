@@ -15,11 +15,10 @@ author = 'Serebryakov Vladislav'
 
 
 extensions = [
-    'myst_nb',
-    # 'nbsphinx',
+    "myst_nb",
     "autoapi.extension",
     "sphinx.ext.napoleon",
-    'sphinx.ext.viewcode',
+    "sphinx.ext.viewcode",
 ]
 
 templates_path = ['_templates']
