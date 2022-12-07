@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import NamedTuple, Tuple
+from typing import Tuple
 
 import numpy as np
 
@@ -8,6 +8,9 @@ from .axis import ArrayAxis
 
 
 class RelationProtocol(ABC):
+    '''Abstract class how create Relation classes.
+
+    '''
 
     @property
     @abstractmethod
@@ -30,6 +33,13 @@ class RelationProtocol(ABC):
 
 
 class MathOperation(Enum):
+    '''Which is math operations will be used.
+
+    Inheritance `Enum` class.
+
+    Args:
+        Enum (_type_): base `Enum` class
+    '''
     ADD = "__add__"
     RADD = "__radd__"
     SUB = "__sub__"
@@ -40,9 +50,3 @@ class MathOperation(Enum):
     RTRUEDIV = "__rtruediv__"
     POW = "__pow__"
     RPOW = "__rpow__"
-
-
-class Spectrogram(NamedTuple):
-    time: np.ndarray
-    frequency: np.ndarray
-    spectrogram_matrix: np.ndarray

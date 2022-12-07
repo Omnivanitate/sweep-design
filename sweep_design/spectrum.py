@@ -8,11 +8,16 @@ from .config.base_config import Config
 from .core import RelationProtocol
 from .exc import ConvertingError
 from .relation import Relation
-from .types import ArrayLike, Number
+from .help_types import ArrayLike, Number
 
 SP = TypeVar("SP", bound="Spectrum")
+'''Instance of `Spectrum`'''
+
 SSPR = Union["Spectrum", "signal.Signal", Relation]
+'''Instance of Spectrum or Signal or Relation'''
+
 SSPRN = Union["Spectrum", "signal.Signal", Relation, Number]
+'''Instance of Spectrum or Signal or Relation or Number'''
 
 
 class Spectrum(Relation):
@@ -22,7 +27,7 @@ class Spectrum(Relation):
 
     Each 'Spectrum' can be converted into a `Signal` using method `get_spectrum`
     To convert the `Spectrum` into a `Signal`, the method defined in the `Config`
-    class is used. (Config.spectrum2signal_method). Current method can be
+    class is used. (`Config.spectrum2signal_method`). Current method can be
     overridden by own in `Config` class.
 
     When performing arithmetic operations on instances of the `Signal` class,
@@ -30,36 +35,50 @@ class Spectrum(Relation):
     the `Signal` instance, and arithmetic operations will be performed
     on this instance. An instance of `Relation` class will be converted into
     the instance of `Spectrum` class.
+
     '''
 
     def __init__(
         self,
         frequency: Union[RelationProtocol, ArrayAxis, ArrayLike],
         spectrum_amplitude: ArrayLike = None,
-        **kwargs
+
     ) -> None:
         '''Initialization of instance of `Spectrum`.
 
         Args:
             frequency (Union[RelationProtocol, ArrayAxis, ArrayLike]):
-            An instance of Relation class or inherited from it,
-            or `ArrayAxis` instance, or array_like object containing
-            numbers (real or complex)
+                An instance of `Relation` class or inherited from it,
+                or `ArrayAxis` instance, or array_like object containing
+                numbers (real or complex).
 
             spectrum_amplitude (ArrayLike, optional):
-            None or array_like object containing numbers (real or complex).
-            Defaults to None.
+                None or array_like object containing numbers (real or complex).
+                Defaults to None.
+
         '''
-        super().__init__(frequency, spectrum_amplitude, **kwargs)
+        super().__init__(frequency, spectrum_amplitude)
         self._spectrum2signal_method_default = Config.spectrum2signal_method
         self.signal: Optional[signal.Signal] = None
 
     @property
     def frequency(self) -> ArrayAxis:
+        '''Frequency array axis.
+
+        Equal to property `x`.
+        Returns:
+            ArrayAxis: frequency array axis.
+        '''
         return self.x
 
     @property
     def amplitude(self) -> np.ndarray:
+        '''Spectrum amplitude array.
+
+        Equal to property `y`.
+        Returns:
+            np.ndarray: spectrum amplitude array.
+        '''
         return self.y
 
     def get_signal(self, recalculate=False,
@@ -69,12 +88,12 @@ class Spectrum(Relation):
         Compute the signal from the spectrum.
 
         Args:
-            recalculate (bool, optional):If `True` then the spectrum will be
-            calculated again, else false, then the saved one will be used.
-            Defaults to `False`. Defaults to False.
+            recalculate (bool, optional): If `True` then the spectrum will be
+                calculated again, else false, then the saved one will be used.
+                Defaults to `False`. Defaults to False.
 
             start_time (float, optional): If True then the signal will be
-            shifted to zero. Defaults to `False`.
+                shifted to zero. Defaults to `False`.
 
         Returns:
             signal.Signal: instance of `Signal` described this `Spectrum`.
@@ -87,7 +106,7 @@ class Spectrum(Relation):
             self.signal = signal.Signal(time, amplitude)
         return self.signal
 
-    def get_amp_spectrum(self: SP, **kwargs) -> Relation:
+    def get_amp_spectrum(self: SP) -> Relation:
         '''Get amplitude spectrum.
 
         Calculate the relationship between the frequency and the absolute
@@ -101,7 +120,7 @@ class Spectrum(Relation):
         '''
         return Relation(self.x.copy(), np.abs(self.y))
 
-    def get_phase_spectrum(self: SP, **kwargs) -> Relation:
+    def get_phase_spectrum(self: SP) -> Relation:
         '''Calculate the relationship between frequency and phase of the spectrum.
 
         Args:
@@ -119,7 +138,6 @@ class Spectrum(Relation):
         subtrack_phase=True,
         frequency_start: float = None,
         frequency_end: float = None,
-        **kwargs
     ) -> SP:
         '''Calculate filter of reversed signal.
 
@@ -127,10 +145,10 @@ class Spectrum(Relation):
             self (SP): instance of Spectrum.
 
             percent (Union[float, int], optional): level of added white noise
-            in percent. Defaults to 5.0.
+                in percent. Defaults to 5.0.
 
             subtrack_phase (bool, optional): If True performs phase subtraction.
-            If False succeeds, add the phase. Defaults to True.
+                If False succeeds, add the phase. Defaults to True.
 
             frequency_start (float, optional): The start frequency. Defaults to None.
             frequency_end (float, optional): The end frequency. Defaults to None.
@@ -150,17 +168,18 @@ class Spectrum(Relation):
             phase_spectrum = 1 * spectrum.get_phase_spectrum()
 
         result_spectrum = type(self).get_spectrum_from_amp_phase(
-            reversed_abs_spectrum, phase_spectrum, **kwargs
+            reversed_abs_spectrum, phase_spectrum
         )
         return result_spectrum
 
-    def add_phase(self: SP, other: SSPR, **kwargs) -> SP:
+    def add_phase(self: SP, other: SSPR) -> SP:
         '''Add phase to spectrum.
 
         Args:
             self (SP): instance of `Spectrum`
+
             other (SSPR): Extracting the `Spectrum` from the object and adding
-            the phase `Spectrum` to the `Spectrum`.
+                the phase `Spectrum` to the `Spectrum`.
 
         Returns:
             `SP`: new instance of `Spectrum`.
@@ -170,16 +189,17 @@ class Spectrum(Relation):
         return type(self).get_spectrum_from_amp_phase(
             self.get_amp_spectrum(),
             self.get_phase_spectrum() + sp_other.get_phase_spectrum(),
-            **kwargs
+
         )
 
-    def sub_phase(self: SP, other: SSPR, **kwargs) -> SP:
+    def sub_phase(self: SP, other: SSPR) -> SP:
         '''Subtrack phase from spectrum.
 
         Args:
             self (SP): instance of `Spectrum`
+
             other (SSPR): Extracting the `Spectrum` from the object and subtrack
-            the phase `Spectrum` from the `Spectrum`.
+                the phase `Spectrum` from the `Spectrum`.
 
         Returns:
             `SP`: new instance of `Spectrum`.
@@ -188,12 +208,12 @@ class Spectrum(Relation):
         return type(self).get_spectrum_from_amp_phase(
             self.get_amp_spectrum(),
             self.get_phase_spectrum() - sp_other.get_phase_spectrum(),
-            **kwargs
+
         )
 
     @classmethod
     def get_spectrum_from_amp_phase(
-        cls: Type[SP], amplitude_spectrum: Relation, phase_spectrum: Relation, **kwargs
+        cls: Type[SP], amplitude_spectrum: Relation, phase_spectrum: Relation
     ) -> SP:
         '''Calculate of the spectrum from the amplitude and phase spectrum.
 
@@ -210,10 +230,10 @@ class Spectrum(Relation):
         '''
 
         return cls(amplitude_spectrum *
-                   ((1.0j * phase_spectrum).exp()), **kwargs)
+                   ((1.0j * phase_spectrum).exp()))
 
     @classmethod
-    def convolve(cls: Type[SP], r1: SSPR, r2: SSPR, **kwargs) -> SP:
+    def convolve(cls: Type[SP], r1: SSPR, r2: SSPR) -> SP:
         '''Convolution of two instances of `Relation` and return new instance of
         `Spectrum`. Instances of `Signal` will be converted to `Spectrum`
 
@@ -227,10 +247,10 @@ class Spectrum(Relation):
         '''
         sp_r1 = _input2spectrum(r1)
         sp_r2 = _input2spectrum(r2)
-        return super().convolve(sp_r1, sp_r2, **kwargs)
+        return super().convolve(sp_r1, sp_r2)
 
     @classmethod
-    def correlate(cls: Type[SP], r1: SSPR, r2: SSPR, **kwargs) -> SP:
+    def correlate(cls: Type[SP], r1: SSPR, r2: SSPR) -> SP:
         '''Correlation of two instances of `Relation` and return new instance of
         `Spectrum`. Instances of `Signal` will be converted to `Spectrum`
 
@@ -244,27 +264,27 @@ class Spectrum(Relation):
         '''
         sp_r1 = _input2spectrum(r1)
         sp_r2 = _input2spectrum(r2)
-        return super().correlate(sp_r1, sp_r2, **kwargs)
+        return super().correlate(sp_r1, sp_r2)
 
-    def __add__(self: SP, a: SSPRN, **kwargs) -> SP:
+    def __add__(self: SP, a: SSPRN) -> SP:
         r_a = _input2spectrum_operation(a)
-        return super().__add__(r_a, **kwargs)
+        return super().__add__(r_a)
 
-    def __sub__(self: SP, a: SSPRN, **kwargs) -> SP:
+    def __sub__(self: SP, a: SSPRN) -> SP:
         r_a = _input2spectrum_operation(a)
-        return super().__sub__(r_a, **kwargs)
+        return super().__sub__(r_a)
 
-    def __mul__(self: SP, a: SSPRN, **kwargs) -> SP:
+    def __mul__(self: SP, a: SSPRN) -> SP:
         r_a = _input2spectrum_operation(a)
-        return super().__mul__(r_a, **kwargs)
+        return super().__mul__(r_a)
 
-    def __truediv__(self: SP, a: SSPRN, **kwargs) -> SP:
+    def __truediv__(self: SP, a: SSPRN) -> SP:
         r_a = _input2spectrum_operation(a)
-        return super().__truediv__(r_a, **kwargs)
+        return super().__truediv__(r_a)
 
-    def __pow__(self: SP, a: SSPRN, **kwargs) -> SP:
+    def __pow__(self: SP, a: SSPRN) -> SP:
         r_a = _input2spectrum_operation(a)
-        return super().__pow__(r_a, **kwargs)
+        return super().__pow__(r_a)
 
 
 def _input2spectrum_operation(

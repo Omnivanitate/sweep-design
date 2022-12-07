@@ -4,28 +4,31 @@ from typing import Tuple, Type, TypeVar, Union
 
 import numpy as np
 
-from .axis import ArrayAxis, get_array_axis_from_array
+from .axis import ArrayAxis
 from .config.base_config import Config
 from .core import MathOperation, RelationProtocol
 from .exc import BadInputError, NotEqualError, TypeFuncError
-from .types import ArrayLike, Number, RealNumber
+from .help_types import ArrayLike, Number, RealNumber
 
 R = TypeVar("R", bound="Relation")
+'''Description first `Relation`.'''
+
 R2 = TypeVar("R2", bound="Relation")
+'''Description second `Relation`.'''
 
 
 class Relation(RelationProtocol):
-    '''A representation of dependency y from x (y = f(x))
+    '''A representation of dependency y from x (y = f(x)).
 
-    The class describe the dependency between x, y. x is ArrayAxis instance showing
+    The class describe the dependency between x, y. x is `ArrayAxis` instance showing
     the start of sequence, the end of sequence and the sample space between elements.
     They consist of real or complex numbers. The array length calculated from
-    ArrayAxis must be equal length of y sequence.
+    `ArrayAxis` must be equal length of y sequence.
 
     For the instance of `Relation` class, define the basic mathematical operations:
-    *addition (+), subtraction(-), multiplication('*'), division(/),
-    exponentiation ('*''*') and their unary representation (+=, -=, *=, /=).
-    The result of the operation is a new instance of the Relation class.
+    addition (+), subtraction(-), multiplication(\\*), division(/),
+    exponentiation (\\*\\*) and their unary representation (+=, -=, \\*=, /=).
+    The result of the operation is a new instance of the `Relation` class.
 
     Determined correlation and convolution between two instances
     (methods: correlate and convolve).
@@ -34,18 +37,18 @@ class Relation(RelationProtocol):
     in the Config class. Methods can be overridden if necessary
     (sweep-design.config).
 
-    WARNING!!! When inheriting the Relation class, it is important to write correctly
-    constructor. It must match the constructor of the Relation class.
+    WARNING!!! When inheriting the `Relation` class, it is important to write correctly
+    constructor. It must match the constructor of the `Relation` class.
     Because some methods return a type(self)(...). For example,
-    addition method (def __add__(self: R, other: Union['Relation', Num])
-     -> R). Or predefine these methods in the inherited class.
+    addition method (def __add__(self: R, other: Union['Relation', Num]) -> R).
+    Or predefine these methods in the inherited class.
 
     Raises:
         BadInputError: Raise this exception if we don't have enough data.
         NotEqualError: Raise this exception if we try create instance use
-        different length of sequence numbers for x and y.
+            different length of sequence numbers for x and y.
         TypeFuncError: Raise an exception, when execute some function with
-        unexpected type of value.
+            unexpected type of value.
 
     Returns:
         _type_: Type of Relation.
@@ -55,9 +58,8 @@ class Relation(RelationProtocol):
         self,
         x: Union[RelationProtocol, ArrayAxis, ArrayLike],
         y: ArrayLike = None,
-        **kwargs,
     ) -> None:
-        '''Initialization of instance of Relation.
+        '''Initialization of instance of `Relation`.
 
         Args:
             x (Union[RelationProtocol, ArrayLike, ArrayAxis]):
@@ -65,7 +67,7 @@ class Relation(RelationProtocol):
                 class, or instance of `ArrayAxis` or an `ArrayLike` object
                 containing numbers(real or complex). if x is `ArrayLike` then
                 it will be converted to `ArrayAxis` instance use method
-                *get_array_axis_from_array* from Config class
+                *get_array_axis_from_array_method* from Config class
 
             y (ArrayLike, optional):
                 None or array_like object containing real or complex numbers.
@@ -77,7 +79,7 @@ class Relation(RelationProtocol):
             NotEqualError: Raise this exception if we try create instance use
         '''
 
-        self._get_array_axis_from_array = Config.get_array_axis_from_array
+        self._get_array_axis_from_array_method = Config.get_array_axis_from_array_method
         self._math_operation = Config.math_operation
         self._interpolate_extrapolate_method = Config.interpolate_extrapolate_method
         self._integrate_one_method = Config.integrate_one_method
@@ -97,7 +99,7 @@ class Relation(RelationProtocol):
         y = np.array(y)
 
         if not isinstance(x, ArrayAxis):
-            x = self._get_array_axis_from_array(x)
+            x = self._get_array_axis_from_array_method(x)
 
         if x.size != y.size:
             raise NotEqualError(x.size, y.size)
@@ -106,51 +108,110 @@ class Relation(RelationProtocol):
 
     @property
     def x(self) -> ArrayAxis:
+        '''ArrayAxis of relation.
+
+        Returns:
+            ArrayAxis: array axis of relation.
+        '''
         return self._x
 
     @property
     def y(self) -> np.ndarray:
+        '''Result of relation of y(x)
+
+        Returns:
+            np.ndarray: array of numbers represent relation of y(x)
+        '''
         return self._y
 
     @property
     def start(self) -> RealNumber:
+        '''Start of array axis x.
+
+        Returns:
+            RealNumber: start number of array axis x.
+        '''
         return self._x.start
 
     @start.setter
     def start(self, value: RealNumber) -> None:
+        '''Setter for start.
+
+        Args:
+            value (RealNumber): set start for array axis x.
+        '''
         self._x.start = value
 
     @property
     def end(self) -> RealNumber:
+        '''End of array axis x.
+
+        Returns:
+            RealNumber: end number of array axis x.
+        '''
         return self._x.end
 
     @end.setter
     def end(self, value: RealNumber):
+        '''Setter for start.
+
+        Args:
+            value (RealNumber): set end for array axis x.
+        '''
         self._x.end = value
 
     @property
     def sample(self) -> RealNumber:
+        '''Sample for array axis x.
+
+        Returns:
+            RealNumber: sample of array axis x.
+        '''
         return self._x.sample
 
     @sample.setter
     def sample(self, value: RealNumber) -> None:
+        '''Setter for sample.
+
+        Args:
+            value (RealNumber): set sample for array axis x.
+        '''
         self._x.sample = value
 
     @property
     def array(self) -> np.ndarray:
+        '''Get array representation of array axis x.
+
+        Returns:
+            np.ndarray: array of numpy.
+        '''
         return self._x.array
 
     @property
     def actual_sample(self) -> Number:
+        '''Get actual sample or array axis x.
+
+        Returns:
+            Number: number of actual sample array x.
+        '''
         return self._x.actual_sample
+
+    @property
+    def size(self) -> int:
+        '''size of array axis x.
+
+        Returns:
+            int: integer number of array size x.
+        '''
+        return self._x.size
 
     def get_data(self) -> Tuple[np.ndarray, np.ndarray]:
         '''Return the data of the object.
 
         Raises:
             NotEqualError: After manipulating on x ArrayAxis, the size of the
-            extracted arrays is checked. If they are different then raise that
-            error.
+                extracted arrays is checked. If they are different then raise
+                that error.
 
         Returns:
             Tuple[np.ndarray, np.ndarray]: tuple of two number sequence
@@ -162,9 +223,19 @@ class Relation(RelationProtocol):
         return self.array.copy(), self.y.copy()
 
     def max(self) -> Number:
+        '''Get maximum of Relation.
+
+        Returns:
+            Number: maximum of y array.
+        '''
         return self._y.max()
 
     def min(self) -> Number:
+        '''Get minimum of Relation.
+
+        Returns:
+            Number: minimum of y array.
+        '''
         return self._y.min()
 
     def get_norm(self) -> RealNumber:
@@ -180,7 +251,7 @@ class Relation(RelationProtocol):
         return self._integrate_one_method(square_self) / (self.sample)
 
     def select_data(self: R, start: Number = None,
-                    end: Number = None, **kwargs) -> R:
+                    end: Number = None) -> R:
         '''Select data using x-axis
 
         Args:
@@ -208,21 +279,45 @@ class Relation(RelationProtocol):
         new_x_array = ArrayAxis(
             start=selected_x[0], end=selected_x[-1], sample=self.sample)
 
-        return type(self)(new_x_array, self.y[is_selected], **kwargs)
+        return type(self)(new_x_array, self.y[is_selected])
 
-    def exp(self: R, **kwargs) -> R:
-        return type(self)(self.x.copy(), np.exp(self.y), **kwargs)
+    def exp(self: R) -> R:
+        '''Get exponent of Relation.
 
-    def diff(self: R, **kwargs) -> R:
+        Args:
+            self (R): instance of Relation
+
+        Returns:
+            R: Relation where new y is exponent of old y.
+        '''
+        return type(self)(self.x.copy(), np.exp(self.y))
+
+    def diff(self: R) -> R:
+        '''Differentiation of 'Relation'.
+
+        Args:
+            self (R): instance of Relation
+
+        Returns:
+            R: result of differentiation.
+        '''
         result = self._differentiate_method(self)
-        return type(self)(*result, **kwargs)
+        return type(self)(*result)
 
-    def integrate(self: R, **kwargs) -> R:
+    def integrate(self: R) -> R:
+        '''Integration of `Relation`.
+
+        Args:
+            self (R): instance of Relation
+
+        Returns:
+            R: result of cumulative integration.
+        '''
         result = self._integrate_method(self)
-        return type(self)(*result, **kwargs)
+        return type(self)(*result)
 
     def interpolate_extrapolate(
-            self: R, new_x: Union[R, ArrayAxis, ArrayLike], **kwargs) -> R:
+            self: R, new_x: Union[R, ArrayAxis, ArrayLike]) -> R:
         '''Interpolates and extrapolates an existing relation using new array
         x of the represented ArrayAxis instance.
 
@@ -238,13 +333,13 @@ class Relation(RelationProtocol):
         elif isinstance(new_x, ArrayAxis):
             new_x = new_x.copy()
         else:
-            new_x = get_array_axis_from_array(new_x, False)
+            new_x = self._get_array_axis_from_array_method(new_x, False)
 
-        new_r = self._interpolate_extrapolate_method(
-            self.x.copy(), self.y.copy())(new_x)
-        return type(self)(*new_r, **kwargs)
+        new_y = self._interpolate_extrapolate_method(
+            self.x.array.copy(), self.y.copy())(new_x)
+        return type(self)(new_x, new_y)
 
-    def shift(self: R, x_shift: Number = 0, **kwargs) -> R:
+    def shift(self: R, x_shift: RealNumber = 0) -> R:
         '''Shifting of relation on the x-axis.
 
         Args:
@@ -258,11 +353,12 @@ class Relation(RelationProtocol):
         new_x = self.x.copy()
         new_x.start = new_x.start + x_shift
         new_x.end = new_x.end + x_shift
-        return type(self)(new_x, self.y, **kwargs)
+        return type(self)(new_x, self.y)
 
     @staticmethod
     def equalize(r1: R, r2: R2) -> Tuple[R, R2]:
         '''Bringing two Relation objects with different x-axes to one common one.
+
         When converting, interpolation and extrapolation are used.
 
         Args:
@@ -282,7 +378,7 @@ class Relation(RelationProtocol):
         return r1, r2
 
     @classmethod
-    def correlate(cls: Type[R], r1: "Relation", r2: "Relation", **kwargs) -> R:
+    def correlate(cls: Type[R], r1: "Relation", r2: "Relation") -> R:
         '''Correlation of two Relations.
 
         Args:
@@ -300,12 +396,12 @@ class Relation(RelationProtocol):
 
         if isinstance(r1, Relation) and isinstance(r2, Relation):
             result = Config.correlate_method(cls, r1, r2)
-            return cls(*result, **kwargs)
+            return cls(*result)
         else:
             raise TypeFuncError("Correlation", type(r1), type(r2))
 
     @classmethod
-    def convolve(cls: Type[R], r1: "Relation", r2: "Relation", **kwargs) -> R:
+    def convolve(cls: Type[R], r1: "Relation", r2: "Relation") -> R:
         '''Convolution of two Relations.
 
         Args:
@@ -322,7 +418,7 @@ class Relation(RelationProtocol):
         '''
         if isinstance(r1, Relation) and isinstance(r2, Relation):
             result = Config.convolve_method(cls, r1, r2)
-            return cls(*result, **kwargs)
+            return cls(*result)
         else:
             raise TypeFuncError("Convolution", type(r1), type(r2))
 
@@ -335,71 +431,68 @@ class Relation(RelationProtocol):
 
         if isinstance(b, RelationProtocol):
             r1, r2 = Relation.equalize(a, b)
-            return a._math_operation(
-                r1.x.copy(), r1.y.copy(), r2.y.copy(), name_operation)
-        elif isinstance(b, (float, int, complex)):
-            return a._math_operation(
-                a.x.copy(), a.y.copy(), b, name_operation)
+            return r1.x.copy(), a._math_operation(
+                r1.y.copy(), r2.y.copy(), name_operation)
         else:
-            raise TypeFuncError(
-                name_operation.value.strip("_"), type(a), type(b))
+            return a.x.copy(), a._math_operation(
+                a.y.copy(), b, name_operation)
 
-    def __add__(self: R, other: Union["Relation", Number], **kwargs) -> R:
+    def __add__(self: R, other: Union["Relation", Number]) -> R:
         return type(self)(
-            *self._operation(self, other, MathOperation.ADD), **kwargs)
+            *self._operation(self, other, MathOperation.ADD))
 
-    def __radd__(self: R, other: Union["Relation", Number], **kwargs) -> R:
+    def __radd__(self: R, other: Union["Relation", Number]) -> R:
         return type(self)(*self._operation(self, other,
-                                           MathOperation.RADD), **kwargs)
+                                           MathOperation.RADD))
 
-    def __sub__(self: R, other: Union["Relation", Number], **kwargs) -> R:
+    def __sub__(self: R, other: Union["Relation", Number]) -> R:
         return type(self)(
-            *self._operation(self, other, MathOperation.SUB), **kwargs)
+            *self._operation(self, other, MathOperation.SUB))
 
-    def __rsub__(self: R, other: Union["Relation", Number], **kwargs) -> R:
+    def __rsub__(self: R, other: Union["Relation", Number]) -> R:
         return type(self)(*self._operation(self, other,
-                                           MathOperation.RSUB), **kwargs)
+                                           MathOperation.RSUB))
 
-    def __mul__(self: R, other: Union["Relation", Number], **kwargs) -> R:
+    def __mul__(self: R, other: Union["Relation", Number]) -> R:
         return type(self)(
-            *self._operation(self, other, MathOperation.MUL), **kwargs)
+            *self._operation(self, other, MathOperation.MUL))
 
-    def __rmul__(self: R, other: Union["Relation", Number], **kwargs) -> R:
+    def __rmul__(self: R, other: Union["Relation", Number]) -> R:
         return type(self)(*self._operation(self, other,
-                                           MathOperation.RMUL), **kwargs)
+                                           MathOperation.RMUL))
 
-    def __truediv__(self: R, other: Union["Relation", Number], **kwargs) -> R:
+    def __truediv__(self: R, other: Union["Relation", Number]) -> R:
         return type(self)(
-            *self._operation(self, other, MathOperation.TRUEDIV), **kwargs
+            *self._operation(self, other, MathOperation.TRUEDIV)
         )
 
-    def __rtruediv__(self: R, other: Union["Relation", Number], **kwargs) -> R:
+    def __rtruediv__(self: R, other: Union["Relation", Number]) -> R:
         return type(self)(
-            *self._operation(self, other, MathOperation.RTRUEDIV), **kwargs
+            *self._operation(self, other, MathOperation.RTRUEDIV)
         )
 
-    def __pow__(self: R, other: Union["Relation", Number], **kwargs) -> R:
+    def __pow__(self: R, other: Union["Relation", Number]) -> R:
         return type(self)(
-            *self._operation(self, other, MathOperation.POW), **kwargs)
+            *self._operation(self, other, MathOperation.POW))
 
-    def __rpow__(self: R, other: Union["Relation", Number], **kwargs) -> R:
+    def __rpow__(self: R, other: Union["Relation", Number]) -> R:
         return type(self)(*self._operation(self, other,
-                                           MathOperation.RPOW), **kwargs)
+                                           MathOperation.RPOW))
 
-    def __iadd__(self: R, other: Union["Relation", Number], **kwargs) -> R:
-        return self.__add__(other, **kwargs)
+    def __iadd__(self: R, other: Union["Relation", Number]) -> R:
+        return self.__add__(other)
 
-    def __isub__(self: R, other: Union["Relation", Number], **kwargs) -> R:
-        return self.__sub__(other, **kwargs)
+    def __isub__(self: R, other: Union["Relation", Number]) -> R:
+        return self.__sub__(other)
 
-    def __imul__(self: R, other: Union["Relation", Number], **kwargs) -> R:
-        return self.__mul__(other, **kwargs)
+    def __imul__(self: R, other: Union["Relation", Number]) -> R:
+        return self.__mul__(other)
 
-    def __idiv__(self: R, other: Union["Relation", Number], **kwargs) -> R:
-        return self.__truediv__(other, **kwargs)
+    def __idiv__(self: R, other: Union["Relation", Number]) -> R:
+        return self.__truediv__(other)
 
-    def __ipow__(self: R, other: Union["Relation", Number], **kwargs) -> R:
-        return self.__pow__(other, **kwargs)
+    def __ipow__(self: R, other: Union["Relation", Number]) -> R:
+        return self.__pow__(other)
 
     def __len__(self) -> int:
         return self._x.size
@@ -430,3 +523,6 @@ class Relation(RelationProtocol):
 
         if isinstance(select_data, slice):
             return self.select_data(select_data.start, select_data.stop)
+
+    def __str__(self) -> str:
+        return f"y: {self.y}\nx: {str(self.x)}"

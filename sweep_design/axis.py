@@ -3,23 +3,7 @@ from typing import Optional
 
 import numpy as np
 
-from .types import ArrayLike, RealNumber
-
-
-def get_actual_sample(x: np.ndarray) -> RealNumber:
-    '''Calculate actual sample. Use for self-test. Problem with floating point
-    in Python (https://docs.python.org/3/tutorial/floatingpoint.html).
-
-    Args:
-        x (np.ndarray): array of numbers.
-
-    Returns:
-        RealNumber: an actual sample
-    '''
-    diff = np.min(np.diff(x))
-    values, counts = np.unique(diff, return_counts=True)
-    common_sample = values[np.argmax(counts)]
-    return common_sample
+from .help_types import ArrayLike, RealNumber
 
 
 class ArrayAxis:
@@ -48,6 +32,11 @@ class ArrayAxis:
 
     @property
     def array(self) -> np.ndarray:
+        '''Representation of array axis into np.ndarray
+
+        Returns:
+            np.ndarray: numpy array
+        '''
         if self._array is None:
             self._array = np.linspace(
                 self._start, self._end,
@@ -93,16 +82,38 @@ class ArrayAxis:
     def size(self) -> int:
         return self.array.size
 
-    def copy(self):
+    def copy(self) -> 'ArrayAxis':
+        '''Copy of array axis.
+
+        Returns:
+            ArrayAxis: copy of array axis
+        '''
         return copy(self)
 
     def __str__(self):
         result = f"start: {self._start}\n" \
             f"end: {self._end}\n" \
-            f"dx: {self._sample}\n" \
-            f"calculated dx: {self._actual_sample}"
+            f"sample: {self._sample}\n" \
+            f"size: {self.size}\n" \
+            f"calculated sample: {self.actual_sample}"
 
         return result
+
+
+def get_actual_sample(x: np.ndarray) -> RealNumber:
+    '''Calculate actual sample. Use for self-test. Problem with floating point
+    in Python (https://docs.python.org/3/tutorial/floatingpoint.html).
+
+    Args:
+        x (np.ndarray): array of numbers.
+
+    Returns:
+        RealNumber: an actual sample
+    '''
+    diff = np.min(np.diff(x))
+    values, counts = np.unique(diff, return_counts=True)
+    common_sample = values[np.argmax(counts)]
+    return common_sample
 
 
 def get_array_axis_from_array(
@@ -111,7 +122,12 @@ def get_array_axis_from_array(
 
     Args:
         x (ArrayLike): input array_like of numbers.
+        round_dx (bool, optional): if True then round sample. Defaults to True.
+
+    Returns:
+        ArrayAxis: new ArrayAxis.
     '''
+
     x = np.array(x)
     dx = get_actual_sample(x)
     if round_dx and isinstance(dx, (int, float)):

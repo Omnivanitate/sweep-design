@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional, Union
 
 import numpy as np
 
-from .axis import ArrayAxis, get_array_axis_from_array
+from .axis import ArrayAxis
 from .config.base_config import Config
 from .config.sweep_config import SweepConfig
 from .defaults.sweep_methods import (CallFtatMethod, Ftatr, InterpolateArray,
@@ -13,7 +13,7 @@ from .defaults.sweep_methods import (CallFtatMethod, Ftatr, InterpolateArray,
 from .exc import BadInputError
 from .relation import Relation
 from .sweep import Sweep
-from .types import ArrayLike
+from .help_types import ArrayLike
 
 
 class UncalculatedSweep:
@@ -43,30 +43,30 @@ class UncalculatedSweep:
 
         Args:
             time (ArrayLike, optional): The `ArrayAxis`, or  an ArrayLike object
-            containing numbers(real or complex). Defaults to None.
+                containing numbers(real or complex). Defaults to None.
 
             frequency_time (Union[Ftatr, ArrayLike], optional):
-            This parameter, which describes changes in frequency over time,
-            can be either an array_like, or an object from which an instance
-            of the `Relation` class will be created, or an instance of the
-            `Relation` class, or a callable object that returns a numeric sequence.
-            If `None`, then the linear function f = t will be used. Defaults to None.
+                This parameter, which describes changes in frequency over time,
+                can be either an array_like, or an object from which an instance
+                of the `Relation` class will be created, or an instance of the
+                `Relation` class, or a callable object that returns a numeric sequence.
+                If `None`, then the linear function f = t will be used. Defaults to None.
 
             amplitude_time (Union[Ftatr, ArrayLike], optional):
-            This parameter, which describes changes in amplitude modulation
-            over time, can be either an array_like, or an object from which
-            an instance of the `Relation` class will be created, or an instance
-            of the `Relation` class, or a callable object that
-            returns a numeric sequence.
-            If `None`, then the function will be assumed to be constant
-            and equal to 1. Defaults to None.
+                This parameter, which describes changes in amplitude modulation
+                over time, can be either an array_like, or an object from which
+                an instance of the `Relation` class will be created, or an instance
+                of the `Relation` class, or a callable object that
+                returns a numeric sequence.
+                If `None`, then the function will be assumed to be constant
+                and equal to 1. Defaults to None.
         '''
 
         self._integrate_function_default = Config.integrate_function_method
+        self._get_array_axis_from_array_method = Config.get_array_axis_from_array_method
 
-        # time = time if time is None else time
         if not (isinstance(time, ArrayAxis) or time is None):
-            time = get_array_axis_from_array(time)
+            time = self._get_array_axis_from_array_method(time)
 
         if not (
             isinstance(
@@ -106,13 +106,13 @@ class UncalculatedSweep:
 
         Args:
             time (Union[ArrayAxis, ArrayLike], optional): The number sequence
-            determines the time. Defaults to None.
+                determines the time. Defaults to None.
 
             tht0 (float, optional): Zero phase. Defaults to 0.0.
 
         Raises:
             BadInputError: raise exception when calling instance without parameter
-            time when time attribute is not created when instance initialized.
+                time when time attribute is not created when instance initialized.
 
         Returns:
             Sweep: an instance of the Sweep class - the calculated sweep signal.
@@ -131,13 +131,14 @@ class UncalculatedSweep:
             if isinstance(time, ArrayAxis):
                 calc_time = time
             else:
-                calc_time = get_array_axis_from_array(time)
+                calc_time = self._get_array_axis_from_array_method(time)
         elif time is None and self._time is not None:
             calc_time = self._time
 
         if isinstance(self._frequency_time, InterpolateArray):
-            tht = self._array_tht(self._frequency_time(calc_time)[1])
-            frequency_time = Relation(*self._frequency_time(calc_time))
+            tht = self._array_tht(self._frequency_time(calc_time))
+            frequency_time = Relation(
+                calc_time, self._frequency_time(calc_time))
         else:
             tht = self._func_tht(self._frequency_time)
             frequency_time = Relation(
@@ -145,7 +146,7 @@ class UncalculatedSweep:
                     calc_time.array))
 
         if isinstance(self._amplitude_time, InterpolateArray):
-            amplitude = self._amplitude_time(calc_time)[1]
+            amplitude = self._amplitude_time(calc_time)
         else:
             amplitude = self._amplitude_time(calc_time.array)
 
@@ -212,16 +213,18 @@ class ApriorUncalculatedSweep(UncalculatedSweep):
         '''Configuring an instance to create a sweep from a aprior data.
 
         Args:
-            time (Any, optional): _description_. Defaults to None.
+            time (Any, optional): The number sequence
+                determines the time. Defaults to None.
 
-            a_prior_data (Any, optional): _description_. Defaults to None.
+            a_prior_data (Any, optional): Data from which will be extracted
+                frequency and amplitude modulation. Defaults to None.
 
             ftat_method (CallFtatMethod, optional): If the conversion method
-            (`ftat_method`) is not defined or `None`, then the method is
-            taken from the `SweepConfig` class `freq2time`  Method can be
-            overridden if necessary
-            (`sweep_design.math_signals.config.SweepConfig.freq2time`).
-            Defaults to None.
+                (`ftat_method`) is not defined or `None`, then the method is
+                taken from the `SweepConfig` class `freq2time`  Method can be
+                overridden if necessary
+                (`sweep_design.math_signals.config.SweepConfig.freq2time`).
+                Defaults to None.
         '''
         if ftat_method is None:
             ftat_method = SweepConfig.freq2time
@@ -243,16 +246,16 @@ class ApriorUncalculatedSweep(UncalculatedSweep):
 
         Args:
             time (Union[ArrayAxis, ArrayLike], optional): The number sequence
-            determines the time. Defaults to None.
+               determines the time. Defaults to None.
 
             tht0 (float, optional): Zero phase. Defaults to 0.0.
 
             is_normalize (bool, optional): Use normalization a prior data for
-            sweep signal. Defaults to True.
+                sweep signal. Defaults to True.
 
         Returns:
             Sweep: an instance of the Sweep class - the calculated sweep signal
-            from a prior data.
+                from a prior data.
         '''
 
         sweep = super().__call__(time=time, tht0=tht0)

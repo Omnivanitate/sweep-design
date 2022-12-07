@@ -2,14 +2,15 @@ from typing import Union
 
 import numpy as np
 
-from .axis import ArrayAxis, get_array_axis_from_array
+from .axis import ArrayAxis
 from .config.sweep_config import SweepConfig
+from .config.base_config import Config
 from .core import RelationProtocol
 from .defaults.sweep_methods import Spectrogram as DataSpectrogram
 from .relation import Relation
 from .signal import Signal
 from .spectrogram import Spectrogram
-from .types import ArrayLike
+from .help_types import ArrayLike
 
 
 class Sweep(Signal):
@@ -30,6 +31,7 @@ class Sweep(Signal):
     `get_amplitude_time` methods defined in the `SweepConfig` class are used.
 
     Perform the same operations as for the inherited class.
+
     '''
 
     def __init__(
@@ -44,24 +46,23 @@ class Sweep(Signal):
 
         Args:
             time (Union[RelationProtocol, ArrayAxis, ArrayLike]):
-            The Relation class, or a class derived from the Relation class,
-            or ArrayAxis, or an array_like object containing
-            numbers(real or complex).
+                The `Relation` class, or a class derived from the Relation class,
+                or ArrayAxis, or an array_like object containing
+                numbers(real or complex).
 
             amplitude (ArrayLike, optional): `None` or array_like object
-            containing real or complex numbers. Defaults to None.
+                containing real or complex numbers. Defaults to None.
 
             frequency_time (Relation, optional):
-            This parameter describes the change in frequency versus time of the
-            transmitted signal. Defaults to None.
+                This parameter describes the change in frequency versus time of the
+                transmitted signal. Defaults to None.
 
             amplitude_time (Relation, optional): This parameter describes
-            the change in amplitude envelop of signal from the time of the
-            transmitted signal. Defaults to None.
-
+                the change in amplitude envelop of signal from the time of the
+                transmitted signal. Defaults to None.
 
             a_prior_signal (Signal, optional): The signal used to create
-            the sweep signal. Defaults to None.
+                the sweep signal. Defaults to None.
 
         '''
 
@@ -112,7 +113,7 @@ def _get_spectrogram(spectrogram: DataSpectrogram) -> Spectrogram:
         frequency = spectrogram[1]
 
     return Spectrogram(
-        time=get_array_axis_from_array(time),
-        frequency=get_array_axis_from_array(frequency),
+        time=Config.get_array_axis_from_array_method(time),
+        frequency=Config.get_array_axis_from_array_method(frequency),
         spectrogram=spectrogram[2],
     )
