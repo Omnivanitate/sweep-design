@@ -6,7 +6,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from sweep_design.relation import Relation
 from sweep_design.axis import ArrayAxis
-from sweep_design.types import Number
+from sweep_design.help_types import Number
 from sweep_design.exc import NotEqualError, BadInputError, TypeFuncError
 
 

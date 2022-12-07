@@ -15,11 +15,16 @@ class TestSpectrum(WrapperTestRelation.TestBaseRelation):
     def setUp(self) -> None:
         self.relation_class = Spectrum
         self.x_axis = ArrayAxis(start=0, end=0.5, sample=0.1)
+
         self.relation = self.relation_class(self.x_axis,
                                             [10.1, -5.231, 123., 0., 12.465, 5.])
 
         self.simple_relation = self.relation_class(self.x_axis,
                                                    [10, 20, 30, 40, 50, 60])
+
+        self.x_axis_2 = ArrayAxis(start=0, end=0.6, sample=0.1)
+        self.simple_second_relation = self.relation_class(self.x_axis_2,
+                                                          [10, 20, 30, 40, 50, 60, 70])
 
     def test_math_operations(self):
         x = ArrayAxis(start=0, end=4, sample=1)
@@ -91,6 +96,13 @@ class TestSpectrum(WrapperTestRelation.TestBaseRelation):
         self.assertIsNot(spectrum.x, amplitude_spectrum.x)
         self.assertIsNot(spectrum.x, phase_spectrum.x)
         assert_array_equal(spectrum.array, amplitude_spectrum.array)
+
+    def test_get_spectrum_from_signal_from_spectrum(self):
+        spectrum = self.simple_relation.get_signal().get_spectrum()
+        self.assertIsInstance(spectrum, self.relation_class)
+
+        spectrum = self.simple_second_relation.get_signal().get_spectrum()
+        self.assertIsInstance(spectrum, self.relation_class)
 
     def test_add_phase(self):
         spectrum = self.relation_class(

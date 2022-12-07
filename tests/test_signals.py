@@ -3,7 +3,7 @@ from numpy.testing import assert_array_equal
 
 from sweep_design.spectrum import Spectrum
 from sweep_design.axis import ArrayAxis
-from sweep_design.exc import ConvertingError
+from sweep_design.exc import ConvertingError, TypeFuncError
 from sweep_design.relation import Relation
 from sweep_design.signal import Signal
 
@@ -22,6 +22,10 @@ class WrapperTestSignal:
 
             self.simple_relation = self.relation_class(self.x_axis,
                                                        [10, 20, 30, 40, 50, 60])
+
+            self.x_axis_2 = ArrayAxis(start=0, end=0.6, sample=0.1)
+            self.simple_second_relation = self.relation_class(self.x_axis_2,
+                                                              [10, 20, 30, 40, 50, 60, 70])
 
         def test_math_operations(self):
             x = ArrayAxis(start=0, end=4, sample=1)
@@ -43,7 +47,7 @@ class WrapperTestSignal:
                     with self.subTest(f"Operation {m}, operation elements {k}", k=k, m=m):
                         self._math_check(r1, k[0], x, y1, k[1], m)
 
-            with self.assertRaises(ConvertingError):
+            with self.assertRaises(TypeFuncError):
                 r1 + 'wrong type'
 
         def test_get_spectrum(self):
@@ -69,6 +73,13 @@ class WrapperTestSignal:
             amplitude_spectrum = self.relation.get_phase_spectrum()
             self.assertIsInstance(amplitude_spectrum, Relation)
             self.assertIsNot(amplitude_spectrum.x, self.x_axis)
+
+        def test_get_signal_from_spectrum_from_signal(self):
+            signal = self.simple_relation.get_spectrum().get_signal()
+            self.assertIsInstance(signal, Signal)
+
+            signal = self.simple_second_relation.get_spectrum().get_signal()
+            self.assertIsInstance(signal, Signal)
 
 
 class TestSignal(WrapperTestSignal.BaseTestSignal):

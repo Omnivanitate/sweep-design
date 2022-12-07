@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from sweep_design.axis import get_array_axis_from_array, ArrayAxis
-from sweep_design.types import Number
+from sweep_design.help_types import Number
 
 
 class TestMethodsToCreateAxis(unittest.TestCase):

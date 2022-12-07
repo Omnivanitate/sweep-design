@@ -9,6 +9,8 @@ from sweep_design.utility_functions.ftat_functions import proportional_freq2time
 from sweep_design.utility_functions.emd_analyze import get_IMFs_ceemdan, get_IMFs_emd
 from sweep_design.utility_functions.f_t import f_t_linear_array, f_t_linear_function
 from sweep_design.utility_functions.a_t import tukey_a_t
+from sweep_design.utility_functions.sweep_correction import correct_sweep
+from sweep_design.utility_functions.source_sweep_correction import get_correction_for_source
 
 
 class TestUtilityFunctions(unittest.TestCase):
@@ -77,3 +79,29 @@ class TestUtilityFunctions(unittest.TestCase):
         self.assertEqual(left_result[0], 0)
         self.assertEqual(left_result[-1], 0)
         self.assertEqual(left_result[int(left_result.size / 2)], 1)
+
+    def test_sweep_correction(self):
+        time_axis = ArrayAxis(0, 10, 0.1)
+
+        signal = Signal(time_axis, np.sin(2 * np.pi * time_axis.array))
+
+        new_signal = correct_sweep(signal)
+
+        self.assertIsInstance(new_signal, Signal)
+
+        new_signal_with_window = correct_sweep(signal, 1.)
+
+        self.assertIsInstance(new_signal_with_window, Signal)
+
+    def test_sweep_correction_source(self):
+
+        time_axis = ArrayAxis(0, 10, 0.1)
+
+        signal = Signal(time_axis, np.sin(2 * np.pi * time_axis.array))
+
+        correct_sweep = get_correction_for_source(signal)
+
+        self.assertIsInstance(correct_sweep, Signal)
+
+        correct_sweep_with_params = get_correction_for_source(
+            signal * 120, 100, 0.01, 0.7, 10, 0.05, lambda x: x)
