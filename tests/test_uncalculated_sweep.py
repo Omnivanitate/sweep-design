@@ -64,34 +64,3 @@ class TestUncalculatedSweep(unittest.TestCase):
                                 continue
 
                             self.check_creation(time, f_t, a_t, second_time)
-
-    @unittest.skip("use general test")
-    def test_input_array_like_data(self):
-        time = ArrayAxis(0., 10., 0.1)
-        f_t = InterpolateArray(
-            Relation([0, 1, 2, 3, 4, 5], [10, 20, 30, 40, 50, 60]))
-        a_t = [10, 20, 30, 40, 50, 60, 70]
-        second_time = [0, 1, 2, 3, 4, 5, 6]
-
-        unsw = UncalculatedSweep(time, f_t, a_t)
-
-        self.assertIsInstance(unsw, UncalculatedSweep)
-
-        sw = unsw()
-
-        self.assertIsInstance(sw, Sweep)
-
-        self.assertEqual(sw.start, 0)
-        self.assertEqual(sw.end, 10)
-        self.assertEqual(sw.sample, 0.1)
-
-        sw = unsw(second_time)
-
-        self.assertIsInstance(unsw, UncalculatedSweep)
-
-        self.assertEqual(sw.start, 0)
-        self.assertEqual(sw.end, 6)
-        self.assertEqual(sw.sample, 1)
-
-        with self.assertRaises(BadInputError):
-            UncalculatedSweep(None, [1, 2, 3], [1, 2, 3])
