@@ -1,12 +1,16 @@
-from typing import Literal, Optional
+from typing import Optional
 import numpy as np
 from scipy.signal.windows import tukey  # type: ignore
+
+from ..help_types import Literal
+
+Location = Literal["left", "right", "both"]
 
 
 def tukey_a_t(
     time: np.ndarray,
     time_tapper: Optional[float],
-    location: Literal["left", "right", "both"] = "both",
+    location: Location = "both",
 ) -> np.ndarray:
     '''Calculate array envelope for signal.
 

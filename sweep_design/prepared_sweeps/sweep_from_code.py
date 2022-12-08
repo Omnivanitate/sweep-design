@@ -1,9 +1,10 @@
-from typing import List, Literal, Union
+from typing import List, Union
 
 import numpy as np
 
 from sweep_design.exc import BadInputError
 
+from ..help_types import Literal
 from ..axis import ArrayAxis
 from ..relation import Relation
 from ..sweep import Sweep

@@ -1,4 +1,6 @@
-from typing import List, Literal
+from typing import List
+
+from ..help_types import Literal
 
 from ..relation import Relation
 

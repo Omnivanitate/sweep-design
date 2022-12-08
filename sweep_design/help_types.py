@@ -1,4 +1,5 @@
-from typing import Any, Callable, Tuple, Union
+import typing
+from typing import Any, Callable, Tuple, Union, TYPE_CHECKING
 
 import numpy as np
 from packaging import version
@@ -37,6 +38,15 @@ X = np.ndarray
 '''x array'''
 Y = np.ndarray
 '''y array'''
+
+if TYPE_CHECKING:
+    from typing import Literal
+else:
+    if hasattr(typing, 'Literal'):
+        from typing import Literal
+    else:
+        from typing_extensions import Literal
+
 
 def get_type():
     '''Get type of array like object from numpy depends on version of numpy.
