@@ -26,11 +26,31 @@ jobs:
       - name: Tests with tox
         run: poetry run tox -e py
 
-      - name: Test build docs
+  docs:
+    needs: tests
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check-out trpository
+        uses: actions/checkout@v1
+
+      - name: Set up python 3.11
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+
+      - name: Install package
+        run: poetry install --without=formatter,tests, release
+
+      - name: build docs
         run: poetry run make html --directory docs/
 
   deploy:
-    needs: tests
+    needs: docs
 
     if: github.event_name == 'push' && github.ref == '/refs/heads/main'
 
@@ -45,7 +65,7 @@ jobs:
       - name: Set up python 3.11
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3.11
 
       - name: Install poetry
         uses: snok/install-poetry@v1
