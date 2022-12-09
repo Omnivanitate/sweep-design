@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sweep-design"
-version = "0.2.1"
+version = "0.2.0"
 description = "Project designed to create and analyze sweep signals."
 authors = ["Vladislav <serebraykov.vs@gmail.com>"]
 license = "MIT"
@@ -42,6 +42,25 @@ matplotlib = "^3.5"
 
 [tool.poetry.group.formatter.dependencies]
 autopep8 = "^2.0.0"
+
+
+[tool.poetry.group.release.dependencies]
+python-semantic-release = "^7.32.2"
+
+[tool.semantic_release]
+version_variable = [
+    "sweep_design/__init__.py:__version__",
+    "pyproject.toml:tool.poetry.version"
+]
+version_source = "tag"
+branch = "main"
+changelog_file = "CHANGELOG.md"
+build_command = "poetry_build"
+dist_path = "dist/"
+upload_to_release = true
+upload_to_pypi = false
+remove_dist = false
+patch_without_tag = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
