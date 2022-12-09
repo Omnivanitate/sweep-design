@@ -27,7 +27,7 @@ jobs:
         run: poetry run tox -e py
 
   deploy:
-    needs: docs
+    needs: tests
 
     if: github.event_name == 'push' && github.ref == 'refs/heads/work-ci-cd'
 
