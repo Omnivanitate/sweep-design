@@ -50,12 +50,11 @@ python-semantic-release = "^7.32.2"
 [tool.semantic_release]
 version_variable = [
     "sweep_design/__init__.py:__version__",
-    "pyproject.toml:tool.poetry.version"
+    "pyproject.toml:version"
 ]
-version_source = "tag"
 branch = "main"
 changelog_file = "CHANGELOG.md"
-build_command = "poetry_build"
+build_command = "poetry build"
 dist_path = "dist/"
 upload_to_release = true
 upload_to_pypi = false
