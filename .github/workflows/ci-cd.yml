@@ -44,7 +44,7 @@ jobs:
         uses: snok/install-poetry@v1
 
       - name: Install package
-        run: poetry install --without=formatter,tests, release
+        run: poetry install --without=formatter,tests,release
 
       - name: build docs
         run: poetry run make html --directory docs/
