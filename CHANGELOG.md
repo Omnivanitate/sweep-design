@@ -2,6 +2,9 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.1 (2022-12-09)
+
+
 ## v0.2.0 (2022-12-nn)
 
 ### Fix
