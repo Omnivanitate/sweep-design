@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sweep-design"
-version = "0.2.0"
+version = "0.3.0"
 description = "Project designed to create and analyze sweep signals."
 authors = ["Vladislav <serebraykov.vs@gmail.com>"]
 license = "MIT"
