@@ -42,7 +42,7 @@ class Spectrum(Relation):
         self,
         frequency: Union[RelationProtocol, ArrayAxis, ArrayLike],
         spectrum_amplitude: ArrayLike = None,
-
+        signal: Optional["signal.Signal"] = None
     ) -> None:
         '''Initialization of instance of `Spectrum`.
 
@@ -59,7 +59,7 @@ class Spectrum(Relation):
         '''
         super().__init__(frequency, spectrum_amplitude)
         self._spectrum2signal_method_default = Config.spectrum2signal_method
-        self.signal: Optional[signal.Signal] = None
+        self._signal = signal
 
     @property
     def frequency(self) -> ArrayAxis:
@@ -81,16 +81,18 @@ class Spectrum(Relation):
         '''
         return self.y
 
-    def get_signal(self, recalculate=False,
-                   start_time: float = None) -> "signal.Signal":
+    def get_signal(
+        self,
+        time: Optional[Union[ArrayAxis, int]] = None,
+        start_time: float = None
+    ) -> "signal.Signal":
         '''Get signal from spectrum.
 
         Compute the signal from the spectrum.
 
         Args:
-            recalculate (bool, optional): If `True` then the spectrum will be
-                calculated again, else false, then the saved one will be used.
-                Defaults to `False`. Defaults to False.
+            time (ArrayAxis, int, optional): Define time to calculate
+            signal. Defaults to None.
 
             start_time (float, optional): If True then the signal will be
                 shifted to zero. Defaults to `False`.
@@ -99,12 +101,14 @@ class Spectrum(Relation):
             signal.Signal: instance of `Signal` described this `Spectrum`.
         '''
 
-        if self.signal is None or recalculate:
+        if self._signal is None or time:
+
             time, amplitude = self._spectrum2signal_method_default(
-                self, start_time
+                self, time, start_time
             )
-            self.signal = signal.Signal(time, amplitude)
-        return self.signal
+            self._signal = signal.Signal(time, amplitude, self)
+
+        return self._signal
 
     def get_amp_spectrum(self: SP) -> Relation:
         '''Get amplitude spectrum.

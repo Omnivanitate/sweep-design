@@ -197,19 +197,6 @@ class WrapperTestRelation:
                 new_ry, [0., 0., 0., 15., 20., 25., 30., 35.,
                          40., 45., 50., 55., 60., 0., 0.])
 
-        def test_shift(self):
-
-            shift_r = self.simple_relation.shift(0.05)
-
-            self.assertEqual(shift_r.start, 0.05)
-            self.assertEqual(shift_r.end, 0.55)
-            self.assertEqual(shift_r.sample, 0.1)
-
-            shift_x, shift_y = shift_r.get_data()
-
-            assert_array_equal(shift_x, self.x_axis.array + 0.05)
-            assert_array_equal(shift_y, [10, 20, 30, 40, 50, 60])
-
         def test_equalize(self):
 
             relation = self.relation_class(
@@ -305,4 +292,15 @@ class WrapperTestRelation:
 
 
 class TestRelation(WrapperTestRelation.TestBaseRelation):
-    pass
+    def test_shift(self):
+
+        shift_r = self.simple_relation.shift(0.05)
+
+        self.assertEqual(shift_r.start, 0.05)
+        self.assertEqual(shift_r.end, 0.55)
+        self.assertEqual(shift_r.sample, 0.1)
+
+        shift_x, shift_y = shift_r.get_data()
+
+        assert_array_equal(shift_x, self.x_axis.array + 0.05)
+        assert_array_equal(shift_y, [10, 20, 30, 40, 50, 60])

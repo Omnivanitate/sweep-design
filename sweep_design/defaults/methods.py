@@ -1,5 +1,5 @@
 """This is where default methods are defined."""
-from typing import TYPE_CHECKING, Callable, Tuple, Type, Union
+from typing import TYPE_CHECKING, Callable, Optional, Tuple, Type, Union
 
 import numpy as np
 import scipy  # type: ignore
@@ -228,21 +228,30 @@ def convolve(cls: Type["Relation"], r1: "Relation",
 # ==============================================================================
 
 def _calculate_spectrum(
-        time: TimeAxis, amplitude: np.ndarray) -> Tuple[FrequencyAxis, np.ndarray]:
+        time: TimeAxis, amplitude: np.ndarray, frequency: Optional[Union[int, ArrayAxis]] = None) -> Tuple[FrequencyAxis, np.ndarray]:
+
+    if frequency is None:
+        size = None
+    elif isinstance(frequency, int):
+        size = frequency
+    else:
+        size = frequency.size
 
     amplitude = np.append(
         amplitude[time.array >= 0.0], amplitude[time.array < 0.0])
-    spectrum = np.fft.rfft(amplitude)
-    np_frequency = np.fft.rfftfreq(
-        amplitude.size, d=time.sample
-    )
+    spectrum = np.fft.rfft(amplitude, size)
 
-    frequency = get_array_axis_from_array(np_frequency, round_dx=False)
+    if frequency is None or isinstance(frequency, int):
+        np_frequency = np.fft.rfftfreq(
+            amplitude.size, d=time.sample
+        )
+        frequency = get_array_axis_from_array(np_frequency, round_dx=False)
+
     return frequency, spectrum
 
 
 def signal2spectrum(
-    relation: 'Relation', is_start_zero=False
+    relation: 'Relation', frequency: Optional[Union[ArrayAxis, int]] = None, is_start_zero=False
 ) -> Tuple[FrequencyAxis, np.ndarray]:
     '''Forward Fourier Transform.
 
@@ -251,6 +260,10 @@ def signal2spectrum(
 
     Args:
         relation (Relation): signal from which get spectrum.
+
+        frequency (ArrayAxis, int, optional): Define frequency to calculate
+            spectrum. Defaults to None.
+
         is_start_zero (bool, optional): Consider array started from zero time.
             Defaults to False.
 
@@ -260,8 +273,9 @@ def signal2spectrum(
     '''
     new_time = relation.x.copy()
     amplitude = relation.y.copy()
+
     if is_start_zero:
-        return _calculate_spectrum(new_time, amplitude)
+        return _calculate_spectrum(new_time, amplitude, frequency)
 
     if new_time.start > 0.0:
         new_time.start = 0.0
@@ -276,11 +290,11 @@ def signal2spectrum(
             amplitude, np.zeros(
                 new_time.size - amplitude.size))
 
-    return _calculate_spectrum(new_time, amplitude)
+    return _calculate_spectrum(new_time, amplitude, frequency)
 
 
 def spectrum2signal(
-    relation: 'Relation', time_start: float = None
+    relation: 'Relation', time: Optional[Union[ArrayAxis, int]] = None, time_start: float = None
 ) -> Tuple[TimeAxis, np.ndarray]:
     '''Inverse Fourier Transform.
 
@@ -289,6 +303,9 @@ def spectrum2signal(
 
     Args:
         relation (Relation): spectrum of signal.
+
+        time (ArrayAxis, int, optional): Define time to calculate
+            signal. Defaults to None.
 
         time_start (float, optional): default fft convert to 0. time. Maybe you
             want another start of time. Defaults to None.
@@ -300,18 +317,28 @@ def spectrum2signal(
     spectrum = relation.y.copy()
     frequency = relation.x.copy()
 
-    amplitude = np.fft.irfft(spectrum)  # type: np.ndarray
-    dt = 1 / (2 * (frequency.end - frequency.start))
-
-    if time_start is None:
-        time = ArrayAxis(0., (amplitude.size - 1) * dt, dt)
-
+    if time is None:
+        size = None
+    elif isinstance(time, int):
+        size = time
     else:
-        time = ArrayAxis(time_start, time_start +
-                         (amplitude.size - 1) * dt, dt)
+        size = time.size
 
-        amplitude = np.append(
-            amplitude[time.array >= 0.0], amplitude[time.array < 0.0])
+    amplitude = np.fft.irfft(spectrum, size)  # type: np.ndarray
+
+    if time is None or isinstance(time, int):
+
+        dt = 1 / (2 * (frequency.end - frequency.start))
+
+        if time_start is None:
+            time = ArrayAxis(0., (amplitude.size - 1) * dt, dt)
+
+        else:
+            time = ArrayAxis(time_start, time_start +
+                             (amplitude.size - 1) * dt, dt)
+
+    amplitude = np.append(
+        amplitude[time.array >= 0.0], amplitude[time.array < 0.0])
 
     return time, amplitude
 

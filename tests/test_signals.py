@@ -81,6 +81,19 @@ class WrapperTestSignal:
             signal = self.simple_second_relation.get_spectrum().get_signal()
             self.assertIsInstance(signal, Signal)
 
+        def test_shift_signal(self):
+            dt = 0.1
+            time = ArrayAxis(0, 1, 0.1)
+            data = np.zeros(time.size)
+            data[0] = 1
+            delta = Signal(time, data)
+
+            shift1 = delta.shift(dt)
+            self.assertEqual(shift1[dt][1], 1)
+
+            shift2 = delta.shift(10 * dt)
+            self.assertEqual(shift2[10 * dt][1], 1)
+
 
 class TestSignal(WrapperTestSignal.BaseTestSignal):
     pass

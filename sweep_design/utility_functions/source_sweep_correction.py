@@ -79,7 +79,7 @@ def get_correction_for_source(
     '''
 
     new_time = signal.x.copy()
-    new_time.end = new_time.end - 2 * new_time.sample
+    new_time.start = new_time.start + 2 * new_time.sample
 
     window = Relation(
         new_time,
@@ -90,11 +90,9 @@ def get_correction_for_source(
             "left"))
 
     displacement = signal.integrate().integrate() / reaction_mass
-    displacement = displacement.shift(-2 * displacement.sample)
+
     new_displacement = None
-
     imfs = get_IMFs_emd(displacement)
-
     imfs[0] = imfs[0] * window
 
     d_array = np.vstack((imfs[0].y, signal.y[1:-1]))

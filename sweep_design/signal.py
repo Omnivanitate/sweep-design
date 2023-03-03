@@ -8,7 +8,7 @@ from .config.base_config import Config
 from .core import RelationProtocol
 from .exc import ConvertingError
 from .relation import Relation
-from .help_types import ArrayLike, Number
+from .help_types import ArrayLike, Number, RealNumber
 
 S = TypeVar("S", bound="Signal")
 '''Instance of `Signal`.'''
@@ -41,7 +41,7 @@ class Signal(Relation):
         self,
         time: Union[RelationProtocol, ArrayAxis, ArrayLike],
         amplitude: ArrayLike = None,
-        **kwargs
+        spectrum: Optional["spectrum.Spectrum"] = None
     ) -> None:
         '''Initialization of instance of `Signal`.
 
@@ -55,8 +55,8 @@ class Signal(Relation):
         '''
 
         self._signal2spectrum_method_default = Config.signal2spectrum_method
-        super().__init__(time, amplitude, **kwargs)
-        self._spectrum: Optional[spectrum.Spectrum] = None
+        super().__init__(time, amplitude)
+        self._spectrum = spectrum
 
     @property
     def time(self) -> ArrayAxis:
@@ -80,14 +80,16 @@ class Signal(Relation):
         '''
         return self.y
 
-    def get_spectrum(self, recalculate=False,
-                     is_start_zero=False) -> "spectrum.Spectrum":
+    def get_spectrum(
+        self,
+        frequency: Optional[Union[ArrayAxis, int]] = None,
+        is_start_zero=False
+    ) -> "spectrum.Spectrum":
         '''Get spectrum from signal.
 
         Args:
-            recalculate (bool, optional): If `True` then the spectrum will be
-                calculated again, else false, then the saved one will be used.
-                Defaults to `False`.
+            frequency (ArrayAxis, int, optional): Define frequency to calculate
+            spectrum. Defaults to None.
 
             is_start_zero (bool, optional): If True then the signal will be
                 shifted to zero. Defaults to `False`.
@@ -96,15 +98,16 @@ class Signal(Relation):
             spectrum.Spectrum: instance of `spectrum.Spectrum` described this `Signal`.
         '''
 
-        if self._spectrum is None or recalculate:
+        if self._spectrum is None or frequency:
+
             f, a = self._signal2spectrum_method_default(
-                self, is_start_zero)
-            self._spectrum = spectrum.Spectrum(f, a)
+                self, frequency, is_start_zero)
+            self._spectrum = spectrum.Spectrum(f, a, self)
 
         return self._spectrum
 
     def get_amplitude_spectrum(
-        self, recalculate=False, is_start_zero=False
+        self, frequency: Optional[Union[ArrayAxis, int]] = None, is_start_zero=False
     ) -> Relation:
         '''Extract amplitude spectrum from `spectrum.Spectrum`.
 
@@ -113,9 +116,8 @@ class Signal(Relation):
         method.
 
         Args:
-            recalculate (bool, optional): If `True` then the spectrum will be
-                calculated again, else false, then the saved one will be used.
-                Defaults to `False`.
+           frequency (ArrayAxis, int, optional): Define frequency to calculate
+            spectrum. Defaults to None.
 
             is_start_zero (bool, optional): If True then the signal will be
                 shifted to zero. Defaults to `False`.
@@ -123,9 +125,9 @@ class Signal(Relation):
         Returns:
             Relation: amplitude spectrum expected Relation instance.
         '''
-        return self.get_spectrum(recalculate, is_start_zero).get_amp_spectrum()
+        return self.get_spectrum(frequency, is_start_zero).get_amp_spectrum()
 
-    def get_phase_spectrum(self, recalculate=False,
+    def get_phase_spectrum(self, frequency: Optional[Union[ArrayAxis, int]] = None,
                            is_start_zero=False) -> Relation:
         '''Extract amplitude spectrum from `spectrum.Spectrum`.
 
@@ -134,9 +136,8 @@ class Signal(Relation):
         method.
 
         Args:
-            recalculate (bool, optional): If `True` then the spectrum will be
-                calculated again, else false, then the saved one will be used.
-                Defaults to `False`.
+            frequency (ArrayAxis, int, optional): Define frequency to calculate
+            spectrum. Defaults to None.
 
             is_start_zero (bool, optional): If True then the signal will be
                 shifted to zero. Defaults to `False`.
@@ -144,8 +145,15 @@ class Signal(Relation):
         Returns:
             Relation: amplitude spectrum expected Relation instance.
         '''
-        return self.get_spectrum(
-            recalculate, is_start_zero).get_phase_spectrum()
+        return self.get_spectrum(frequency, is_start_zero).get_phase_spectrum()
+
+    def shift(self: S, x_shift: RealNumber = 0) -> S:
+
+        sp = self.get_spectrum()
+        shift = spectrum.Spectrum(
+            sp.frequency, np.exp(-1j * sp.frequency.array * 2 * np.pi * x_shift))
+
+        return self.add_phase(shift)
 
     def get_reverse_signal(
         self: S,
@@ -183,7 +191,7 @@ class Signal(Relation):
                 frequency_start,
                 frequency_end
             )
-            .get_signal()
+            .get_signal(self.time)
         )
 
         return type(self)(signal)
@@ -200,13 +208,8 @@ class Signal(Relation):
         Returns:
             S: new instance of `Signal`.
         '''
-        sp_other = spectrum._input2spectrum(other)
-        self_spectrum = self.get_spectrum()
-        new_spectrum = spectrum.Spectrum.get_spectrum_from_amp_phase(
-            self_spectrum.get_amp_spectrum(),
-            self_spectrum.get_phase_spectrum() + sp_other.get_phase_spectrum(),
-        )
-        return type(self)(new_spectrum.get_signal())
+        return type(self)(self.get_spectrum().add_phase(
+            other).get_signal(self.time))
 
     def sub_phase(self: S, other: SSPR) -> S:
         '''Subtrack phase from signal.
@@ -220,13 +223,8 @@ class Signal(Relation):
         Returns:
             S: new instance of Signal.
         '''
-        sp_other = spectrum._input2spectrum(other)
-        self_spectrum = self.get_spectrum()
-        new_spectrum = spectrum.Spectrum.get_spectrum_from_amp_phase(
-            self_spectrum.get_amp_spectrum(),
-            self_spectrum.get_phase_spectrum() - sp_other.get_phase_spectrum(),
-        )
-        return type(self)(new_spectrum.get_signal())
+        return type(self)(self.get_spectrum().sub_phase(
+            other).get_signal(self.time))
 
     @classmethod
     def convolve(cls: Type[S], r1: SSPR, r2: SSPR) -> S:
