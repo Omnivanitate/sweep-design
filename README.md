@@ -138,3 +138,7 @@ Result:
 [`numpy`](https://numpy.org/)  
 [`scipy`](https://scipy.org/)  
 [`EMD-signal`](https://pyemd.readthedocs.io/en/latest/)
+
+### TODO
+
+1. Merge array axis.
