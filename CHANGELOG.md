@@ -2,6 +2,9 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.1 (2023-03-03)
+
+
 ## v0.2.0 (2022-12-10)
 ### Feature
 * Edit ci-cd ([`996db56`](https://github.com/Omnivanitate/sweep-design/commit/996db56b33bc122815ac28f5d314fbb3340c9f41))
